@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zones - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Setup</p>
+                <h2 class="page-title">Zones</h2>
+                <p class="page-sub">Each zone has its own fixed pickup schedule.</p>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/layout :: flash}"></div>
+
+        <div class="panel">
+            <h2 th:text="${editing} ? 'Edit Zone' : 'Add Zone'">Add Zone</h2>
+            <form class="entry-form" th:action="@{/zones/save}" th:object="${zone}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="field">
+                    <label for="name">Zone name</label>
+                    <input type="text" th:field="*{name}" placeholder="e.g. Anna Nagar East" required maxlength="100">
+                </div>
+                <div class="field">
+                    <label for="wardCode">Ward code</label>
+                    <input type="text" th:field="*{wardCode}" placeholder="e.g. W-12" maxlength="20">
+                </div>
+                <div class="field">
+                    <label for="supervisorName">Supervisor</label>
+                    <input type="text" th:field="*{supervisorName}" maxlength="100">
+                </div>
+                <div class="field">
+                    <label for="areaDescription">Area covered</label>
+                    <input type="text" th:field="*{areaDescription}" placeholder="Streets / landmarks" maxlength="250">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Update' : 'Save'">Save</button>
+                    <a th:if="${editing}" class="btn btn-secondary" th:href="@{/zones}">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>All zones <span class="hint" th:text="${#lists.size(zones)} + ' zones'"></span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Name</th><th>Ward</th><th>Supervisor</th><th>Area covered</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="z : ${zones}">
+                        <td class="num" th:text="${z.id}"></td>
+                        <td><a th:href="@{/households(zoneId=${z.id})}" th:text="${z.name}"></a></td>
+                        <td th:text="${z.wardCode}"></td>
+                        <td th:text="${z.supervisorName}"></td>
+                        <td th:text="${z.areaDescription}"></td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/zones/edit/{id}(id=${z.id})}">Edit</a>
+                            <a class="btn btn-danger btn-sm delete-link" th:href="@{/zones/delete/{id}(id=${z.id})}">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(zones)}">
+                        <td colspan="6" class="empty">No zones yet. Add the first one above.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

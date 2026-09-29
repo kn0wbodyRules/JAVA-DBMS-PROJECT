@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<aside th:fragment="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+        <div class="mark">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#7fd19a" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 7h16"/>
+                <path d="M9 7V4.5h6V7"/>
+                <path d="M6 7l1 13h10l1-13"/>
+                <path d="M10 11v5M14 11v5"/>
+            </svg>
+            <h1>Waste Collection &amp; Segregation</h1>
+        </div>
+        <p class="tagline">Schedule &rarr; Pickup &rarr; Score &rarr; Feedback</p>
+        <div class="bin-dots" aria-hidden="true">
+            <span style="background: var(--wet)"></span>
+            <span style="background: var(--dry)"></span>
+            <span style="background: var(--recycle)"></span>
+            <span style="background: var(--hazard)"></span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <a th:href="@{/}" th:classappend="${activePage == 'dashboard'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+            Dashboard
+        </a>
+
+        <span class="nav-label">Setup</span>
+        <a th:href="@{/zones}" th:classappend="${activePage == 'zones'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg>
+            Zones
+        </a>
+        <a th:href="@{/households}" th:classappend="${activePage == 'households'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 11l8-6 8 6v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>
+            Households
+        </a>
+        <a th:href="@{/collectors}" th:classappend="${activePage == 'collectors'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+            Collectors
+        </a>
+
+        <span class="nav-label">Operations</span>
+        <a th:href="@{/schedules}" th:classappend="${activePage == 'schedules'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+            Pickup Schedule
+        </a>
+        <a th:href="@{/scores}" th:classappend="${activePage == 'scores'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>
+            Segregation Scores
+        </a>
+        <a th:href="@{/notices}" th:classappend="${activePage == 'notices'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
+            Feedback Notices
+        </a>
+
+        <span class="nav-label">Insight</span>
+        <a th:href="@{/reports}" th:classappend="${activePage == 'reports'} ? 'active'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 20V10M11 20V4M18 20v-7"/><path d="M3 20h18"/></svg>
+            Reports
+        </a>
+    </nav>
+
+    <div class="sidebar-foot">DBMS Mini Project &middot; Waste Segregation Feedback Loop</div>
+</aside>
+
+<div th:fragment="flash">
+    <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+    <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Household Scorecard - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow"><a th:href="@{/households}">Households</a> / Scorecard</p>
+                <h2 class="page-title" th:text="'House ' + ${household.houseNumber} + ' – ' + ${household.ownerName}">House</h2>
+                <p class="page-sub" th:text="${household.zone.name} + (${household.address} != null ? ' · ' + ${household.address} : '')"></p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/scores(householdId=${household.id})}">+ Log score for this house</a>
+        </div>
+
+        <div class="grid-2">
+            <div class="panel">
+                <h2>Current standing <span class="hint" th:text="'last ' + ${recentWindow} + ' pickups'"></span></h2>
+                <div class="scorecard-head">
+                    <div class="big-score" th:classappend="'grade-' + ${#strings.toLowerCase(summary.grade == 'N/A' ? 'na' : summary.grade)}">
+                        <span th:text="${summary.recentAverage != null ? summary.recentAverage : '–'}">–</span>
+                        <small th:text="${summary.grade}">N/A</small>
+                    </div>
+                    <dl class="meta-list">
+                        <dt>Pickups scored</dt><dd class="num" th:text="${summary.pickups}"></dd>
+                        <dt>All-time average</dt><dd class="num" th:text="${summary.overallAverage != null ? summary.overallAverage : '-'}"></dd>
+                        <dt>Latest score</dt><dd class="num" th:text="${summary.latestScore != null ? summary.latestScore + '/10' : '-'}"></dd>
+                        <dt>Mixed-waste pickups</dt><dd class="num" th:text="${summary.mixedCount}"></dd>
+                        <dt>Trend</dt><dd th:class="'trend-' + ${#strings.toLowerCase(summary.trend == 'No data' ? 'steady' : summary.trend)}" th:text="${summary.trend}"></dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Score history <span class="hint">oldest → newest</span></h2>
+                <div class="spark" th:unless="${#lists.isEmpty(scores)}">
+                    <span th:each="i : ${#numbers.sequence(#lists.size(scores) - 1, 0, -1)}"
+                          th:attr="data-value=${scores[i].score}"
+                          th:title="${scores[i].pickupDate} + ': ' + ${scores[i].score} + '/10'"></span>
+                </div>
+                <p class="empty" th:if="${#lists.isEmpty(scores)}">No scores yet.</p>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 22px">
+            <h2>Pickup log</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Date</th><th>Collector</th><th>Score</th><th>Issues</th><th>Remarks</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${scores}">
+                        <td class="num" th:text="${s.pickupDate}"></td>
+                        <td th:text="${s.collector != null ? s.collector.name : '-'}"></td>
+                        <td><span class="score-pill" th:attr="data-score=${s.score}" th:text="${s.score} + '/10'"></span></td>
+                        <td>
+                            <div class="flags">
+                                <span class="flag" th:if="${s.wetDryMixed}">Wet + dry mixed</span>
+                                <span class="flag" th:if="${s.plasticInWetWaste}">Plastic in wet</span>
+                                <span class="flag" th:if="${s.hazardousNotSeparated}">Hazardous not separated</span>
+                            </div>
+                        </td>
+                        <td class="muted" th:text="${s.remarks}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(scores)}">
+                        <td colspan="5" class="empty">No pickups scored for this household.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Feedback sent to this household</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Date</th><th>Type</th><th>Message</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="n : ${notices}">
+                        <td class="num" th:text="${n.issuedDate}"></td>
+                        <td><span class="badge" th:classappend="'type-' + ${#strings.toLowerCase(n.noticeType)}" th:text="${n.noticeType}"></span></td>
+                        <td class="notice-msg" th:text="${n.message}"></td>
+                        <td><span class="badge" th:classappend="'status-' + ${#strings.toLowerCase(n.status)}" th:text="${n.status}"></span></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(notices)}">
+                        <td colspan="4" class="empty">No feedback notices yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

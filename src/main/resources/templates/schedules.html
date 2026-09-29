@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pickup Schedule - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Operations</p>
+                <h2 class="page-title">Pickup Schedule</h2>
+                <p class="page-sub">Fixed weekly slots per zone, one row per waste category.</p>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/layout :: flash}"></div>
+
+        <div class="panel">
+            <h2 th:text="${editing} ? 'Edit Pickup Slot' : 'Add Pickup Slot'">Add Pickup Slot</h2>
+            <form class="entry-form validate-times" th:action="@{/schedules/save}" th:object="${schedule}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="field">
+                    <label for="zoneId">Zone</label>
+                    <select id="zoneId" name="zoneId" required>
+                        <option value="">-- select --</option>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name}"
+                                th:selected="${schedule.zone != null and schedule.zone.id == z.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="dayOfWeek">Day</label>
+                    <select th:field="*{dayOfWeek}" required>
+                        <option value="">-- select --</option>
+                        <option th:each="d : ${days}" th:value="${d}" th:text="${#strings.capitalize(#strings.toLowerCase(d))}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="wasteCategory">Waste category</label>
+                    <select th:field="*{wasteCategory}" required>
+                        <option value="Wet">Wet (green bin)</option>
+                        <option value="Dry">Dry (blue bin)</option>
+                        <option value="Recyclable">Recyclable</option>
+                        <option value="Hazardous">Hazardous</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="startTime">Start time</label>
+                    <input type="time" th:field="*{startTime}" required>
+                </div>
+                <div class="field">
+                    <label for="endTime">End time</label>
+                    <input type="time" th:field="*{endTime}" required>
+                </div>
+                <div class="field">
+                    <label for="collectorId">Collector</label>
+                    <select id="collectorId" name="collectorId">
+                        <option value="">-- unassigned --</option>
+                        <option th:each="c : ${collectors}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${schedule.collector != null and schedule.collector.id == c.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="check positive"><input type="checkbox" th:field="*{active}"> Active</label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Update' : 'Save'">Save</button>
+                    <a th:if="${editing}" class="btn btn-secondary" th:href="@{/schedules}">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Weekly timetable <span class="hint">active slots only · today highlighted</span></h2>
+            <div class="table-wrap">
+                <table class="timetable">
+                    <thead>
+                    <tr>
+                        <th>Zone</th>
+                        <th th:each="d : ${days}" th:classappend="${d == todayDay} ? 'today'"
+                            th:text="${#strings.substring(d, 0, 3)}"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${grid}">
+                        <td class="zone-cell" th:text="${row.key}"></td>
+                        <td th:each="d : ${days}" th:classappend="${d == todayDay} ? 'today'">
+                            <span th:each="s : ${row.value[d.name()]}" class="slot" th:classappend="'cat-' + ${#strings.toLowerCase(s.wasteCategory)}">
+                                <b th:text="${s.wasteCategory}"></b>
+                                <small th:text="${#temporals.format(s.startTime, 'HH:mm')} + '–' + ${#temporals.format(s.endTime, 'HH:mm')}"></small>
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${grid.isEmpty()}">
+                        <td th:colspan="${#arrays.length(days) + 1}" class="empty">No active pickup slots yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>All slots <span class="hint" th:text="${#lists.size(schedules)} + ' slots'"></span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Day</th><th>Time</th><th>Zone</th><th>Category</th><th>Collector</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${schedules}">
+                        <td class="num" th:text="${s.id}"></td>
+                        <td th:text="${#strings.capitalize(#strings.toLowerCase(s.dayOfWeek))}"></td>
+                        <td class="num" th:text="${#temporals.format(s.startTime, 'HH:mm')} + ' – ' + ${#temporals.format(s.endTime, 'HH:mm')}"></td>
+                        <td th:text="${s.zone.name}"></td>
+                        <td><span class="badge" th:classappend="'cat-' + ${#strings.toLowerCase(s.wasteCategory)}" th:text="${s.wasteCategory}"></span></td>
+                        <td th:text="${s.collector != null ? s.collector.name : 'Unassigned'}" th:classappend="${s.collector == null} ? 'muted'"></td>
+                        <td><span class="badge" th:classappend="${s.active} ? 'grade-excellent' : 'status-inactive'" th:text="${s.active} ? 'Active' : 'Paused'"></span></td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/schedules/edit/{id}(id=${s.id})}">Edit</a>
+                            <a class="btn btn-danger btn-sm delete-link" th:href="@{/schedules/delete/{id}(id=${s.id})}">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(schedules)}">
+                        <td colspan="8" class="empty">No pickup slots yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

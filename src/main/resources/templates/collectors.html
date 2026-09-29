@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collectors - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Setup</p>
+                <h2 class="page-title">Collectors</h2>
+                <p class="page-sub">Field staff who run pickups and log segregation scores.</p>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/layout :: flash}"></div>
+
+        <div class="panel">
+            <h2 th:text="${editing} ? 'Edit Collector' : 'Add Collector'">Add Collector</h2>
+            <form class="entry-form" th:action="@{/collectors/save}" th:object="${collector}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input type="text" th:field="*{name}" required maxlength="100">
+                </div>
+                <div class="field">
+                    <label for="employeeCode">Employee code</label>
+                    <input type="text" th:field="*{employeeCode}" placeholder="e.g. COL-004" maxlength="30">
+                </div>
+                <div class="field">
+                    <label for="phone">Phone</label>
+                    <input type="tel" th:field="*{phone}" pattern="[0-9+\- ]{6,15}" title="6 to 15 digits">
+                </div>
+                <div class="field">
+                    <label for="zoneId">Home zone</label>
+                    <select id="zoneId" name="zoneId">
+                        <option value="">-- none --</option>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name}"
+                                th:selected="${collector.zone != null and collector.zone.id == z.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="check positive"><input type="checkbox" th:field="*{active}"> Active</label>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Update' : 'Save'">Save</button>
+                    <a th:if="${editing}" class="btn btn-secondary" th:href="@{/collectors}">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>All collectors <span class="hint" th:text="${#lists.size(collectors)} + ' collectors'"></span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Name</th><th>Code</th><th>Phone</th><th>Home zone</th><th>Status</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${collectors}">
+                        <td class="num" th:text="${c.id}"></td>
+                        <td th:text="${c.name}"></td>
+                        <td th:text="${c.employeeCode}"></td>
+                        <td th:text="${c.phone}"></td>
+                        <td th:text="${c.zone != null ? c.zone.name : '-'}"></td>
+                        <td>
+                            <span class="badge" th:classappend="${c.active} ? 'grade-excellent' : 'status-inactive'"
+                                  th:text="${c.active} ? 'Active' : 'Inactive'"></span>
+                        </td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/collectors/edit/{id}(id=${c.id})}">Edit</a>
+                            <a class="btn btn-danger btn-sm delete-link" th:href="@{/collectors/delete/{id}(id=${c.id})}">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(collectors)}">
+                        <td colspan="7" class="empty">No collectors yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

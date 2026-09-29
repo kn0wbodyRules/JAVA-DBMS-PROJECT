@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Segregation Scores - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Operations</p>
+                <h2 class="page-title">Segregation Scores</h2>
+                <p class="page-sub">Collectors rate each household's segregation at pickup, from 0 (fully mixed) to 10 (perfectly separated).</p>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/layout :: flash}"></div>
+
+        <div class="panel">
+            <h2 th:text="${editing} ? 'Edit Score Log' : 'Log Pickup Score'">Log Pickup Score</h2>
+            <form class="entry-form score-form" th:action="@{/scores/save}" th:object="${score}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="field">
+                    <label for="householdId">Household</label>
+                    <select id="householdId" name="householdId" required>
+                        <option value="">-- select --</option>
+                        <option th:each="h : ${households}" th:value="${h.id}"
+                                th:text="${h.zone.name} + ' · ' + ${h.houseNumber} + ' – ' + ${h.ownerName}"
+                                th:selected="${score.household != null and score.household.id == h.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="collectorId">Collector</label>
+                    <select id="collectorId" name="collectorId">
+                        <option value="">-- select --</option>
+                        <option th:each="c : ${collectors}" th:value="${c.id}" th:text="${c.name}"
+                                th:selected="${score.collector != null and score.collector.id == c.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="pickupDate">Pickup date</label>
+                    <input type="date" th:field="*{pickupDate}" th:max="${today}" required>
+                </div>
+
+                <div class="field wide">
+                    <span class="label">Issues spotted</span>
+                    <div style="display:flex; gap: 22px; flex-wrap: wrap">
+                        <label class="check"><input type="checkbox" th:field="*{wetDryMixed}" data-cap="4"> Wet and dry waste mixed</label>
+                        <label class="check"><input type="checkbox" th:field="*{plasticInWetWaste}" data-cap="7"> Plastic in wet waste</label>
+                        <label class="check"><input type="checkbox" th:field="*{hazardousNotSeparated}" data-cap="6"> Hazardous waste not separated</label>
+                    </div>
+                </div>
+
+                <div class="field wide">
+                    <label for="score">Segregation score</label>
+                    <div class="score-picker">
+                        <input type="range" min="0" max="10" step="1" th:field="*{score}">
+                        <span class="score-readout">5/10</span>
+                    </div>
+                    <div class="rubric">
+                        <div><b style="color: var(--good)">8 – 10 · Excellent</b>Separate bins, nothing mixed.</div>
+                        <div><b style="color: var(--fair)">5 – 7 · Fair</b>Mostly separated, minor slips.</div>
+                        <div><b style="color: var(--poor)">0 – 4 · Poor</b>Wet and dry handed over together.</div>
+                    </div>
+                </div>
+
+                <div class="field wide">
+                    <label for="remarks">Remarks</label>
+                    <input type="text" th:field="*{remarks}" maxlength="250" placeholder="Optional note for the household">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Update' : 'Save score'">Save score</button>
+                    <a th:if="${editing}" class="btn btn-secondary" th:href="@{/scores}">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>Score log <span class="hint" th:text="${#lists.size(scores)} + ' pickups'"></span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>Date</th><th>House</th><th>Zone</th><th>Collector</th><th>Score</th><th>Grade</th><th>Issues</th><th>Remarks</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${scores}">
+                        <td class="num" th:text="${s.id}"></td>
+                        <td class="num" th:text="${s.pickupDate}"></td>
+                        <td><a th:href="@{/households/{id}(id=${s.household.id})}" th:text="${s.household.houseNumber} + ' – ' + ${s.household.ownerName}"></a></td>
+                        <td th:text="${s.household.zone.name}"></td>
+                        <td th:text="${s.collector != null ? s.collector.name : '-'}"></td>
+                        <td><span class="score-pill" th:attr="data-score=${s.score}" th:text="${s.score}"></span></td>
+                        <td><span class="badge" th:classappend="'grade-' + ${#strings.toLowerCase(s.grade)}" th:text="${s.grade}"></span></td>
+                        <td>
+                            <div class="flags">
+                                <span class="flag" th:if="${s.wetDryMixed}">Mixed</span>
+                                <span class="flag" th:if="${s.plasticInWetWaste}">Plastic</span>
+                                <span class="flag" th:if="${s.hazardousNotSeparated}">Hazardous</span>
+                            </div>
+                        </td>
+                        <td class="muted" th:text="${s.remarks}"></td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/scores/edit/{id}(id=${s.id})}">Edit</a>
+                            <a class="btn btn-danger btn-sm delete-link" th:href="@{/scores/delete/{id}(id=${s.id})}">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(scores)}">
+                        <td colspan="10" class="empty">No pickups scored yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Insight</p>
+                <h2 class="page-title">Reports</h2>
+                <p class="page-sub">
+                    Overall average:
+                    <b th:text="${overallAverage != null ? overallAverage + '/10' : 'no scores yet'}"></b>.
+                    Compliance is the share of pickups where wet and dry waste were not mixed.
+                </p>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Zone compliance</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Zone</th><th>Households</th><th>Pickups scored</th><th>Avg score</th><th style="width: 34%">Compliance</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="z : ${zoneSummaries}">
+                        <td th:text="${z.zone.name}"></td>
+                        <td class="num" th:text="${z.households}"></td>
+                        <td class="num" th:text="${z.pickups}"></td>
+                        <td>
+                            <span th:if="${z.averageScore != null}" class="score-pill" th:attr="data-score=${z.averageScore}" th:text="${z.averageScore}"></span>
+                            <span th:unless="${z.averageScore != null}" class="muted">-</span>
+                        </td>
+                        <td>
+                            <div class="bar-cell" th:if="${z.compliancePercent != null}">
+                                <div class="bar"><span th:attr="data-width=${z.compliancePercent},data-tone='score'"></span></div>
+                                <span class="num" th:text="${z.compliancePercent} + '%'"></span>
+                            </div>
+                            <span th:unless="${z.compliancePercent != null}" class="muted">No pickups scored</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(zoneSummaries)}">
+                        <td colspan="5" class="empty">No zones yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Household leaderboard <span class="hint">lowest recent average first</span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>House</th><th>Zone</th><th>Pickups</th><th>Recent avg</th><th>All-time avg</th><th>Mixed</th><th>Grade</th><th>Trend</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${householdSummaries}">
+                        <td><a th:href="@{/households/{id}(id=${h.household.id})}" th:text="${h.household.houseNumber} + ' – ' + ${h.household.ownerName}"></a></td>
+                        <td th:text="${h.household.zone.name}"></td>
+                        <td class="num" th:text="${h.pickups}"></td>
+                        <td>
+                            <span th:if="${h.recentAverage != null}" class="score-pill" th:attr="data-score=${h.recentAverage}" th:text="${h.recentAverage}"></span>
+                            <span th:unless="${h.recentAverage != null}" class="muted">-</span>
+                        </td>
+                        <td class="num" th:text="${h.overallAverage != null ? h.overallAverage : '-'}"></td>
+                        <td class="num" th:text="${h.mixedCount}"></td>
+                        <td><span class="badge" th:classappend="'grade-' + ${h.grade == 'N/A' ? 'na' : #strings.toLowerCase(h.grade)}" th:text="${h.grade}"></span></td>
+                        <td th:class="'trend-' + ${h.trend == 'No data' ? 'steady' : #strings.toLowerCase(h.trend)}" th:text="${h.trend}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(householdSummaries)}">
+                        <td colspan="8" class="empty">No households yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>Collector activity</h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Collector</th><th>Home zone</th><th>Pickups scored</th><th>Avg score given</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="c : ${collectorSummaries}">
+                        <td th:text="${c.collector.name}"></td>
+                        <td th:text="${c.collector.zone != null ? c.collector.zone.name : '-'}"></td>
+                        <td class="num" th:text="${c.logs}"></td>
+                        <td class="num" th:text="${c.averageGiven != null ? c.averageGiven : '-'}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(collectorSummaries)}">
+                        <td colspan="4" class="empty">No collectors yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

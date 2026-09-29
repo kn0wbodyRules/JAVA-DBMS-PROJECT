@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Overview</p>
+                <h2 class="page-title">Dashboard</h2>
+                <p class="page-sub" th:text="${#temporals.format(today, 'EEEE, d MMMM yyyy')}">Today</p>
+            </div>
+            <a class="btn btn-primary" th:href="@{/scores}">+ Log a pickup score</a>
+        </div>
+
+        <div class="stats">
+            <a class="stat" th:href="@{/zones}">
+                <div class="label">Zones</div>
+                <div class="value" th:text="${zoneCount}">0</div>
+            </a>
+            <a class="stat" th:href="@{/households}">
+                <div class="label">Households</div>
+                <div class="value" th:text="${householdCount}">0</div>
+            </a>
+            <a class="stat" th:href="@{/collectors}">
+                <div class="label">Active collectors</div>
+                <div class="value" th:text="${collectorCount}">0</div>
+            </a>
+            <a class="stat" th:href="@{/scores}">
+                <div class="label">Pickups scored</div>
+                <div class="value" th:text="${scoreCount}">0</div>
+            </a>
+            <a class="stat" th:href="@{/reports}">
+                <div class="label">Avg segregation</div>
+                <div class="value">
+                    <span th:text="${averageScore != null ? averageScore : '-'}">-</span><small>/10</small>
+                </div>
+            </a>
+            <a class="stat" th:href="@{/notices}">
+                <div class="label">Unacknowledged notices</div>
+                <div class="value" th:text="${pendingNotices}">0</div>
+            </a>
+        </div>
+
+        <div class="grid-2">
+            <div class="panel">
+                <h2>Today's pickups <span class="hint" th:text="${#lists.size(todaySchedules)} + ' scheduled'"></span></h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>Time</th><th>Zone</th><th>Category</th><th>Collector</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="s : ${todaySchedules}">
+                            <td class="num" th:text="${s.startTime != null ? #temporals.format(s.startTime, 'HH:mm') : '-'} + ${s.endTime != null ? ' – ' + #temporals.format(s.endTime, 'HH:mm') : ''}"></td>
+                            <td th:text="${s.zone.name}"></td>
+                            <td><span class="badge" th:classappend="'cat-' + ${#strings.toLowerCase(s.wasteCategory)}" th:text="${s.wasteCategory}"></span></td>
+                            <td th:text="${s.collector != null ? s.collector.name : 'Unassigned'}" th:classappend="${s.collector == null} ? 'muted'"></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(todaySchedules)}">
+                            <td colspan="4" class="empty">No pickups scheduled for today.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Needs attention <span class="hint">recent average below 5</span></h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr><th>House</th><th>Zone</th><th>Recent avg</th><th>Trend</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="h : ${attention}">
+                            <td th:text="${h.household.houseNumber} + ' · ' + ${h.household.ownerName}"></td>
+                            <td th:text="${h.household.zone.name}"></td>
+                            <td><span class="score-pill" th:attr="data-score=${h.recentAverage}" th:text="${h.recentAverage}"></span></td>
+                            <td th:class="'trend-' + ${#strings.toLowerCase(h.trend)}" th:text="${h.trend}"></td>
+                            <td class="actions"><a class="btn btn-secondary btn-sm" th:href="@{/households/{id}(id=${h.household.id})}">Scorecard</a></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(attention)}">
+                            <td colspan="5" class="empty">No households are below the threshold.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" style="margin-top: 22px">
+            <h2>Latest score logs <a class="hint" th:href="@{/scores}">View all</a></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>Date</th><th>House</th><th>Zone</th><th>Collector</th><th>Score</th><th>Issues</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="s : ${recentScores}">
+                        <td class="num" th:text="${s.pickupDate}"></td>
+                        <td><a th:href="@{/households/{id}(id=${s.household.id})}" th:text="${s.household.houseNumber}"></a></td>
+                        <td th:text="${s.household.zone.name}"></td>
+                        <td th:text="${s.collector != null ? s.collector.name : '-'}"></td>
+                        <td><span class="score-pill" th:attr="data-score=${s.score}" th:text="${s.score} + '/10'"></span></td>
+                        <td>
+                            <div class="flags">
+                                <span class="flag" th:if="${s.wetDryMixed}">Wet + dry mixed</span>
+                                <span class="flag" th:if="${s.plasticInWetWaste}">Plastic in wet</span>
+                                <span class="flag" th:if="${s.hazardousNotSeparated}">Hazardous not separated</span>
+                                <span class="muted" th:unless="${s.wetDryMixed or s.plasticInWetWaste or s.hazardousNotSeparated}">None</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentScores)}">
+                        <td colspan="6" class="empty">No pickups have been scored yet.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>

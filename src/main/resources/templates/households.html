@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Households - Waste Collection</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <div th:replace="~{fragments/layout :: sidebar}"></div>
+
+    <main class="main-content">
+        <div class="page-head">
+            <div>
+                <p class="page-eyebrow">Setup</p>
+                <h2 class="page-title">Households</h2>
+                <p class="page-sub">Every household belongs to one zone and follows that zone's pickup schedule.</p>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/layout :: flash}"></div>
+
+        <div class="panel">
+            <h2 th:text="${editing} ? 'Edit Household' : 'Register Household'">Register Household</h2>
+            <form class="entry-form" th:action="@{/households/save}" th:object="${household}" method="post">
+                <input type="hidden" th:field="*{id}">
+                <div class="field">
+                    <label for="houseNumber">House / door no.</label>
+                    <input type="text" th:field="*{houseNumber}" placeholder="e.g. 12B" required maxlength="30">
+                </div>
+                <div class="field">
+                    <label for="ownerName">Resident / owner</label>
+                    <input type="text" th:field="*{ownerName}" required maxlength="100">
+                </div>
+                <div class="field">
+                    <label for="zoneId">Zone</label>
+                    <select id="zoneId" name="zoneId" required>
+                        <option value="">-- select --</option>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name}"
+                                th:selected="${household.zone != null and household.zone.id == z.id}"></option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="memberCount">Members</label>
+                    <input type="number" min="1" max="50" th:field="*{memberCount}">
+                </div>
+                <div class="field">
+                    <label for="phone">Phone</label>
+                    <input type="tel" th:field="*{phone}" pattern="[0-9+\- ]{6,15}" title="6 to 15 digits">
+                </div>
+                <div class="field">
+                    <label for="address">Street address</label>
+                    <input type="text" th:field="*{address}" maxlength="250">
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" th:text="${editing} ? 'Update' : 'Save'">Save</button>
+                    <a th:if="${editing}" class="btn btn-secondary" th:href="@{/households}">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="panel">
+            <h2>
+                <span>Registered households <span class="hint" th:text="${#lists.size(households)} + ' shown'"></span></span>
+                <form class="filter-bar" th:action="@{/households}" method="get" th:unless="${editing}">
+                    <label class="hint" for="filterZone">Zone</label>
+                    <select id="filterZone" name="zoneId" class="auto-submit">
+                        <option value="">All zones</option>
+                        <option th:each="z : ${zones}" th:value="${z.id}" th:text="${z.name}"
+                                th:selected="${selectedZoneId == z.id}"></option>
+                    </select>
+                </form>
+            </h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr><th>ID</th><th>House</th><th>Resident</th><th>Zone</th><th>Members</th><th>Phone</th><th>Address</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${households}">
+                        <td class="num" th:text="${h.id}"></td>
+                        <td><a th:href="@{/households/{id}(id=${h.id})}" th:text="${h.houseNumber}"></a></td>
+                        <td th:text="${h.ownerName}"></td>
+                        <td th:text="${h.zone.name}"></td>
+                        <td class="num" th:text="${h.memberCount}"></td>
+                        <td th:text="${h.phone}"></td>
+                        <td th:text="${h.address}"></td>
+                        <td class="actions">
+                            <a class="btn btn-secondary btn-sm" th:href="@{/households/{id}(id=${h.id})}">Scorecard</a>
+                            <a class="btn btn-secondary btn-sm" th:href="@{/households/edit/{id}(id=${h.id})}">Edit</a>
+                            <a class="btn btn-danger btn-sm delete-link" th:href="@{/households/delete/{id}(id=${h.id})}">Delete</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(households)}">
+                        <td colspan="8" class="empty">No households registered.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/script.js}"></script>
+</body>
+</html>
